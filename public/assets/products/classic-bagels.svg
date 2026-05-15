@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 520">
+  <rect width="640" height="520" rx="28" fill="#fff4db"/>
+  <g transform="translate(106 134)">
+    <circle cx="116" cy="118" r="92" fill="#d9a14b"/><circle cx="116" cy="118" r="42" fill="#fff4db"/>
+    <circle cx="276" cy="118" r="92" fill="#c98c3d"/><circle cx="276" cy="118" r="42" fill="#fff4db"/>
+    <circle cx="196" cy="236" r="92" fill="#e0aa54"/><circle cx="196" cy="236" r="42" fill="#fff4db"/>
+  </g>
+  <text x="42" y="68" fill="#2b2018" font-family="Georgia, serif" font-size="38" font-weight="700">Classic Bagels</text>
+</svg>

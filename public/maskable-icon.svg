@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#1c1714"/>
+  <circle cx="256" cy="236" r="170" fill="#fff7e9"/>
+  <path d="M118 282c32 72 96 112 138 112s106-40 138-112c-36 22-86 35-138 35s-102-13-138-35Z" fill="#d9974e"/>
+  <path d="M154 225c24-46 58-70 102-70s78 24 102 70c-32-14-66-21-102-21s-70 7-102 21Z" fill="#b86b2f"/>
+  <path d="M188 255c42 13 91 13 136 0" fill="none" stroke="#7a3f20" stroke-width="21" stroke-linecap="round"/>
+  <text x="256" y="462" text-anchor="middle" font-family="Arial, sans-serif" font-size="72" font-weight="800" fill="#fff7e9">GF</text>
+</svg>

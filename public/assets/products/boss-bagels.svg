@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 520">
+  <rect width="640" height="520" rx="28" fill="#f6ead7"/>
+  <g transform="translate(118 130)">
+    <circle cx="120" cy="120" r="96" fill="#b87531"/>
+    <circle cx="120" cy="120" r="42" fill="#f6ead7"/>
+    <circle cx="286" cy="120" r="96" fill="#d19642"/>
+    <circle cx="286" cy="120" r="42" fill="#f6ead7"/>
+    <circle cx="204" cy="240" r="96" fill="#c78138"/>
+    <circle cx="204" cy="240" r="42" fill="#f6ead7"/>
+    <g fill="#f7e4b0">
+      <circle cx="86" cy="82" r="5"/><circle cx="128" cy="70" r="4"/><circle cx="310" cy="92" r="4"/><circle cx="246" cy="235" r="5"/><circle cx="178" cy="208" r="4"/>
+    </g>
+  </g>
+  <text x="44" y="70" fill="#241813" font-family="Georgia, serif" font-size="38" font-weight="700">Boss Bagels</text>
+</svg>

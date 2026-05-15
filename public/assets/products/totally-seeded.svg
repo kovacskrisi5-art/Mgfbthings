@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 520">
+  <rect width="640" height="520" rx="28" fill="#eef1df"/>
+  <path d="M130 354c20-120 89-190 190-190s170 70 190 190c-82 54-294 54-380 0Z" fill="#7b5a35"/>
+  <path d="M174 330c24-82 76-126 146-126s122 44 146 126c-71 32-221 32-292 0Z" fill="#a9733f"/>
+  <g fill="#f2d788">
+    <circle cx="250" cy="232" r="7"/><circle cx="298" cy="218" r="6"/><circle cx="360" cy="240" r="7"/><circle cx="220" cy="290" r="6"/><circle cx="324" cy="286" r="8"/><circle cx="410" cy="300" r="6"/>
+  </g>
+  <text x="42" y="68" fill="#27311e" font-family="Georgia, serif" font-size="38" font-weight="700">Totally Seeded</text>
+</svg>

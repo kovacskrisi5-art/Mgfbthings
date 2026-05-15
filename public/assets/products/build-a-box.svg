@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 520">
+  <rect width="640" height="520" rx="28" fill="#eaf1e7"/>
+  <rect x="116" y="140" width="408" height="270" rx="22" fill="#ba8b57"/>
+  <rect x="144" y="168" width="352" height="214" rx="14" fill="#f5dfbd"/>
+  <circle cx="230" cy="254" r="55" fill="#d3953f"/><circle cx="230" cy="254" r="22" fill="#f5dfbd"/>
+  <path d="M294 315c14-68 50-103 104-103s90 35 104 103c-48 24-154 24-208 0Z" fill="#976538"/>
+  <text x="42" y="68" fill="#1d3f35" font-family="Georgia, serif" font-size="42" font-weight="700">Build-a-Box</text>
+</svg>

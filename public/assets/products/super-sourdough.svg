@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 520">
+  <rect width="640" height="520" rx="28" fill="#f8efe1"/>
+  <ellipse cx="320" cy="380" rx="230" ry="45" fill="#dfc9a6"/>
+  <path d="M142 352c24-131 86-202 181-202 101 0 165 69 190 202-82 51-277 51-371 0Z" fill="#9d6a3a"/>
+  <path d="M178 330c25-98 75-149 147-149 78 0 128 50 153 149-73 34-224 35-300 0Z" fill="#c48a4d"/>
+  <path d="M245 216c38 28 90 34 154 15M218 270c54 32 122 37 203 17M203 318c75 33 160 35 249 8" fill="none" stroke="#f5dfb9" stroke-width="16" stroke-linecap="round"/>
+  <text x="42" y="68" fill="#2d241d" font-family="Georgia, serif" font-size="38" font-weight="700">Super Sourdough</text>
+</svg>

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 520">
+  <rect width="640" height="520" rx="28" fill="#edf2df"/>
+  <g transform="translate(112 132)">
+    <circle cx="118" cy="118" r="94" fill="#b97832"/><circle cx="118" cy="118" r="42" fill="#edf2df"/>
+    <circle cx="284" cy="118" r="94" fill="#d1903e"/><circle cx="284" cy="118" r="42" fill="#edf2df"/>
+    <circle cx="202" cy="238" r="94" fill="#c38035"/><circle cx="202" cy="238" r="42" fill="#edf2df"/>
+    <g fill="#252015">
+      <circle cx="94" cy="78" r="4"/><circle cx="140" cy="86" r="4"/><circle cx="272" cy="68" r="4"/><circle cx="318" cy="104" r="4"/><circle cx="184" cy="224" r="4"/><circle cx="240" cy="250" r="4"/>
+    </g>
+  </g>
+  <text x="42" y="68" fill="#25351e" font-family="Georgia, serif" font-size="32" font-weight="700">Nigella Seed &amp; Garlic</text>
+</svg>

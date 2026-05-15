@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 520">
+  <rect width="640" height="520" rx="28" fill="#f7ecd6"/>
+  <path d="M126 332c48-101 194-178 380-219 22-5 36 21 20 38-116 122-252 205-393 218-21 2-31-18-7-37Z" fill="#c88639"/>
+  <path d="M218 287c24-35 55-61 93-78M305 242c24-34 57-60 98-79M392 198c26-30 58-52 97-67" fill="none" stroke="#f3d7a6" stroke-width="15" stroke-linecap="round"/>
+  <text x="42" y="68" fill="#2b2018" font-family="Georgia, serif" font-size="42" font-weight="700">Baguette</text>
+</svg>
