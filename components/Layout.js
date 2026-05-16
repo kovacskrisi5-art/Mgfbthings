@@ -45,8 +45,8 @@ export default function Layout({ children }) {
       {children}
       <nav className="bottom-nav" aria-label="Mobile app navigation">
         <Link className={router.pathname === '/' ? 'active' : ''} href="/">Shop</Link>
-        <Link href="/#available-now">Now</Link>
         <Link className={router.pathname === '/build-box' ? 'active' : ''} href="/build-box">Build</Link>
+        <Link className={router.pathname === '/track' ? 'active' : ''} href="/track">Track</Link>
         <Link className={router.pathname === '/cart' ? 'active' : ''} href="/cart">Cart <span>{count}</span></Link>
       </nav>
     </main>
