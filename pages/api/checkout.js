@@ -186,10 +186,14 @@ export default async function handler(req, res) {
     return res.status(200).json({ url: session.url, orderId: order.id });
   } catch (err) {
     console.error('Checkout error:', err);
-    const isConfigError = err.message.includes('Supabase') || err.message.includes('Stripe is not configured');
+    const isConfigError =
+      err.message.includes('Supabase') ||
+      err.message.includes('Stripe is not configured') ||
+      err.message.includes('Stripe demo checkout') ||
+      err.message.includes('Live Stripe keys are blocked');
     return res.status(isConfigError ? 503 : 500).json({
       error: isConfigError
-        ? 'Checkout is not configured yet. Add Supabase and Stripe environment variables.'
+        ? 'Demo checkout is not configured yet. Add a development Supabase project and Stripe test environment variables.'
         : err.message,
     });
   }

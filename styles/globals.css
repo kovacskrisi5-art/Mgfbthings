@@ -241,6 +241,10 @@ h2 {
   color: var(--ink);
 }
 
+.quiet-link {
+  color: var(--muted);
+}
+
 .bread-board,
 .hero-image-board {
   aspect-ratio: 0.86;
@@ -411,6 +415,40 @@ h2 {
 
 .section-heading {
   max-width: 640px;
+}
+
+.builder-bridge {
+  align-items: center;
+  background: var(--charcoal);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  color: #fff;
+  display: flex;
+  gap: 22px;
+  justify-content: space-between;
+  margin-top: 70px;
+  padding: 26px;
+}
+
+.builder-bridge .eyebrow {
+  color: #f2c985;
+}
+
+.builder-bridge h2 {
+  margin-bottom: 8px;
+}
+
+.builder-bridge p:not(.eyebrow) {
+  color: rgba(255, 255, 255, 0.74);
+  margin-bottom: 0;
+  max-width: 620px;
+}
+
+.builder-bridge .primary-link {
+  background: #fff;
+  border-color: #fff;
+  color: var(--charcoal);
+  flex: 0 0 auto;
 }
 
 .quick-order {
@@ -952,21 +990,6 @@ dd {
   padding: 34px;
 }
 
-.payment-footer {
-  background: linear-gradient(180deg, rgba(255,255,255,0.86), #fff);
-  border-top: 1px solid var(--line);
-  bottom: -34px;
-  margin: 8px -34px -34px;
-  padding: 16px 34px 20px;
-  position: sticky;
-}
-
-.payment-button {
-  box-shadow: 0 10px 24px rgba(55, 33, 20, 0.18);
-  font-size: 17px;
-  min-height: 54px;
-}
-
 .field-group {
   display: grid;
   gap: 7px;
@@ -1218,6 +1241,16 @@ dd {
 .checkout-progress .active {
   background: var(--charcoal);
   color: #fff;
+}
+
+.field-hint {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0;
+}
+
+.weekday-selector {
+  grid-template-columns: repeat(5, 1fr);
 }
 
 .cart-summary span {
@@ -1772,6 +1805,55 @@ dd {
   padding-top: 32px;
 }
 
+.builder-hero-panel {
+  align-items: stretch;
+  background: linear-gradient(135deg, rgba(255, 247, 233, 0.96), rgba(220, 231, 212, 0.72));
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--soft-shadow);
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  padding: 24px;
+}
+
+.builder-hero-panel h1 {
+  font-size: clamp(38px, 6vw, 64px);
+  margin-bottom: 14px;
+}
+
+.builder-subtext {
+  margin-bottom: 0;
+}
+
+.builder-plan-card {
+  background: var(--charcoal);
+  border-radius: 8px;
+  color: #fff;
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+}
+
+.builder-plan-card span,
+.builder-summary-main span {
+  color: #f2c985;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.builder-plan-card strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.builder-plan-card small {
+  color: rgba(255, 255, 255, 0.72);
+}
+
 .builder-steps {
   display: grid;
   gap: 8px;
@@ -1780,7 +1862,7 @@ dd {
 }
 
 .builder-steps button {
-  background: #f5ead9;
+  background: rgba(255, 255, 255, 0.68);
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--muted);
@@ -1797,7 +1879,7 @@ dd {
   align-items: start;
   display: grid;
   gap: 18px;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr) 300px;
 }
 
 .builder-products {
@@ -1836,6 +1918,22 @@ dd {
   font-size: 14px;
 }
 
+.builder-panel-intro {
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 4px;
+  padding-bottom: 12px;
+}
+
+.builder-panel-intro h2 {
+  font-size: 32px;
+  margin-bottom: 6px;
+}
+
+.builder-panel-intro p:not(.eyebrow) {
+  color: var(--muted);
+  margin-bottom: 0;
+}
+
 .builder-summary {
   background: var(--charcoal);
   border-radius: 8px;
@@ -1848,14 +1946,17 @@ dd {
   top: 18px;
 }
 
-.builder-summary > span {
-  color: #f2c985;
-  font-size: 12px;
-  font-weight: 900;
-  text-transform: uppercase;
+.builder-summary-main {
+  display: grid;
+  gap: 6px;
 }
 
-.builder-summary > strong {
+.builder-mini-list {
+  display: grid;
+  gap: 6px;
+}
+
+.builder-summary-main > strong {
   font-size: 34px;
 }
 
@@ -1866,6 +1967,7 @@ dd {
 
 .builder-summary .summary-row {
   border-color: rgba(255, 255, 255, 0.16);
+  padding-top: 6px;
 }
 
 .full-builder-link {
@@ -2058,8 +2160,17 @@ dd {
   .hero,
   .intro-grid,
   .product-layout,
-  .checkout-panel {
+  .checkout-panel,
+  .builder-hero-panel,
+  .builder-bridge {
     grid-template-columns: 1fr;
+  }
+
+  .builder-bridge {
+    align-items: stretch;
+    display: grid;
+    margin-top: 46px;
+    padding: 18px;
   }
 
   .product-list {
@@ -2112,12 +2223,117 @@ dd {
     grid-template-columns: repeat(3, 1fr);
   }
 
+  .builder-page {
+    padding-bottom: 96px;
+    padding-top: 18px;
+  }
+
+  .builder-hero-panel {
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .builder-hero-panel h1 {
+    font-size: 36px;
+  }
+
+  .builder-plan-card {
+    padding: 12px;
+  }
+
+  .builder-plan-card strong {
+    font-size: 22px;
+  }
+
+  .builder-steps {
+    margin: 12px 0;
+  }
+
+  .builder-steps button {
+    font-size: 12px;
+    min-height: 38px;
+    padding: 6px;
+  }
+
+  .builder-product-card {
+    align-items: center;
+    grid-template-columns: 76px minmax(0, 1fr) auto;
+    padding: 10px;
+  }
+
+  .builder-product-card img {
+    aspect-ratio: 1;
+  }
+
+  .builder-product-card h2 {
+    font-size: 19px;
+    margin-bottom: 3px;
+  }
+
+  .builder-product-card p {
+    display: -webkit-box;
+    font-size: 12px;
+    line-clamp: 2;
+    margin-bottom: 5px;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .builder-product-card .cart-quantity {
+    flex-direction: column;
+  }
+
   .builder-summary {
-    bottom: 72px;
+    align-items: center;
+    bottom: 74px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
     left: 14px;
-    position: sticky;
+    padding: 10px 12px;
+    position: fixed;
     right: 14px;
-    z-index: 10;
+    top: auto;
+    z-index: 19;
+  }
+
+  .builder-summary-main {
+    gap: 2px;
+  }
+
+  .builder-summary-main span {
+    font-size: 9px;
+  }
+
+  .builder-summary-main > strong {
+    font-size: 20px;
+  }
+
+  .builder-summary-main p {
+    font-size: 12px;
+    margin-bottom: 0;
+  }
+
+  .builder-mini-list {
+    display: none;
+  }
+
+  .builder-summary .form-error {
+    grid-column: 1 / -1;
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  .full-builder-link {
+    background: #fff;
+    border-color: #fff;
+    color: var(--charcoal);
+    min-height: 40px;
+    padding: 0 12px;
+  }
+
+  .weekday-selector {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
   .checkout-summary h2 {
@@ -2152,12 +2368,6 @@ dd {
   .admin-header,
   .admin-order {
     padding: 22px;
-  }
-
-  .payment-footer {
-    bottom: -22px;
-    margin: 8px -22px -22px;
-    padding: 14px 22px 18px;
   }
 
   .admin-header,

@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowName = DAY_NAMES[tomorrow.getDay()];
 
-  if (!['Monday', 'Thursday'].includes(tomorrowName)) {
+  if (!['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].includes(tomorrowName)) {
     return res.status(200).json({ message: `No deliveries tomorrow (${tomorrowName})`, sent: 0 });
   }
 

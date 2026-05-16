@@ -46,6 +46,8 @@ Brand/content:
 
 ## Local Setup
 
+This app is currently intended for testing/demo use only. Use a dedicated Supabase development project and Stripe test-mode keys. Do not connect this demo to live payments or production customer data.
+
 1. Install dependencies:
 
 ```bash
@@ -58,7 +60,7 @@ npm install
 cp .env.example .env.local
 ```
 
-3. Create a Supabase project, open the SQL editor, and run:
+3. Create a Supabase development/test project, open the SQL editor, and run:
 
 ```sql
 -- paste the contents of supabase/schema.sql
@@ -86,8 +88,11 @@ where email = 'admin@example.com';
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
+ALLOW_LIVE_PAYMENTS=false
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
+
+Live Stripe secret keys are blocked by default for this demo. Keep `ALLOW_LIVE_PAYMENTS=false`.
 
 7. Start the app:
 
@@ -113,6 +118,10 @@ The webhook marks orders as paid, reduces product stock, and records inventory m
 ## Test Payments
 
 Use Stripe test card `4242 4242 4242 4242`, any future expiry date, any CVC, and any postcode.
+
+## Demo Deployment
+
+For Vercel demo setup, see `DEMO_SETUP.md`. Add only demo Supabase credentials and Stripe test-mode keys to the Vercel project environment variables.
 
 ## Main Routes
 

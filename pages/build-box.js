@@ -7,13 +7,13 @@ import { addCustomBoxToCart, formatPrice } from '../lib/cart';
 
 const MIN_ITEMS = 4;
 const MAX_ITEMS = 12;
-const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
 export default function BuildBox() {
   const [products, setProducts] = useState([]);
   const [quantities, setQuantities] = useState({});
   const [step, setStep] = useState(1);
-  const [orderMode, setOrderMode] = useState('one_time');
+  const [orderMode, setOrderMode] = useState('subscription');
   const [weekdays, setWeekdays] = useState(['Monday']);
   const [boxName, setBoxName] = useState('My custom bakery box');
   const [email, setEmail] = useState('');
@@ -23,7 +23,7 @@ export default function BuildBox() {
   useEffect(() => {
     fetch('/api/products')
       .then((response) => response.json())
-      .then((data) => setProducts((data.products || []).filter((product) => product.active !== false)));
+      .then((data) => setProducts((data.products || []).filter(isBuilderProduct)));
   }, []);
 
   const selectedItems = useMemo(
@@ -117,9 +117,19 @@ export default function BuildBox() {
       <Layout>
         {notice && <div className="notice">{notice}</div>}
         <section className="section builder-page">
-          <div className="section-heading">
-            <p className="eyebrow">Build Your Own Box</p>
-            <h1>Mix your perfect bakery box.</h1>
+          <div className="builder-hero-panel">
+            <div>
+              <p className="eyebrow">Subscription builder</p>
+              <h1>Build a recurring bakery box.</h1>
+              <p className="hero-text builder-subtext">
+                Choose the bakes, assign weekdays, then save the box as a custom bakery plan.
+              </p>
+            </div>
+            <div className="builder-plan-card" aria-label="Subscription plan summary">
+              <span>Custom plan</span>
+              <strong>{orderMode === 'subscription' ? 'Recurring weekdays' : 'One-time custom box'}</strong>
+              <small>{orderMode === 'subscription' ? weekdays.join(', ') || 'Choose weekdays' : 'Checkout once, no recurring schedule'}</small>
+            </div>
           </div>
 
           <div className="builder-steps">
@@ -154,6 +164,11 @@ export default function BuildBox() {
 
               {step === 2 && (
                 <div className="page-form builder-schedule">
+                  <div className="builder-panel-intro">
+                    <p className="eyebrow">Recurring setup</p>
+                    <h2>Assign this box to delivery days.</h2>
+                    <p>Subscriptions can run on any weekday. Keep one-time only for special custom orders.</p>
+                  </div>
                   <div className="field-group">
                     <label>Order type</label>
                     <div className="segmented">
@@ -179,6 +194,11 @@ export default function BuildBox() {
 
               {step === 3 && (
                 <div className="page-form builder-save">
+                  <div className="builder-panel-intro">
+                    <p className="eyebrow">Saved box</p>
+                    <h2>Save and manage this plan.</h2>
+                    <p>Saved boxes can be reordered later or used as the base for recurring subscriptions.</p>
+                  </div>
                   <div className="field-group">
                     <label htmlFor="boxName">Box name</label>
                     <input id="boxName" value={boxName} onChange={(event) => setBoxName(event.target.value)} />
@@ -192,7 +212,9 @@ export default function BuildBox() {
                   </form>
                   <div className="builder-actions">
                     <button className="secondary-link" disabled={!valid || !email} onClick={saveBox} type="button">Save box</button>
-                    <button className="checkout-button" disabled={!valid} onClick={() => addBoxToCart()} type="button">Add custom box to cart</button>
+                    <button className="checkout-button" disabled={!valid} onClick={() => addBoxToCart()} type="button">
+                      {orderMode === 'subscription' ? 'Add recurring box to cart' : 'Add one-time box to cart'}
+                    </button>
                   </div>
                   {savedBoxes.length > 0 && (
                     <section className="saved-boxes">
@@ -213,17 +235,20 @@ export default function BuildBox() {
             </section>
 
             <aside className="builder-summary">
-              <span>Live summary</span>
-              <strong>{formatPrice(total)}</strong>
-              <p>{itemCount}/{MAX_ITEMS} items selected · minimum {MIN_ITEMS}</p>
-              {selectedItems.map((item) => (
+              <div className="builder-summary-main">
+                <span>Plan summary</span>
+                <strong>{formatPrice(total)}</strong>
+              <p>{itemCount}/{MAX_ITEMS} selected · min {MIN_ITEMS}</p>
+              </div>
+              <div className="builder-mini-list">
+              {selectedItems.slice(0, 5).map((item) => (
                 <div className="summary-row" key={item.product_id}>
                   <span>{item.quantity}x {item.name}</span>
-                  <strong>{formatPrice(item.unit_price * item.quantity)}</strong>
                 </div>
               ))}
+              {selectedItems.length > 5 && <p>+ {selectedItems.length - 5} more items</p>}
+              </div>
               {!valid && <div className="form-error">Choose between {MIN_ITEMS} and {MAX_ITEMS} items.</div>}
-              {valid && <button className="checkout-button full" onClick={() => setStep(Math.min(3, step + 1))} type="button">Next step</button>}
               <Link className="secondary-link full-builder-link" href="/cart">View cart</Link>
             </aside>
           </div>
@@ -231,4 +256,9 @@ export default function BuildBox() {
       </Layout>
     </>
   );
+}
+
+function isBuilderProduct(product) {
+  const category = product.metadata?.category || product.category;
+  return product.active !== false && category !== 'Boxes & Bundles';
 }

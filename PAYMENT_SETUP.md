@@ -18,6 +18,7 @@ Create `.env.local` in this folder:
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
+ALLOW_LIVE_PAYMENTS=false
 ADMIN_PASSWORD=changeme123
 DATABASE_PATH=./bakery-data.json
 ```
@@ -45,7 +46,7 @@ Use Stripe test card:
 
 Use any future expiry date, any CVC, and any postcode.
 
-## Vercel production setup
+## Vercel demo setup
 
 In the Vercel dashboard, open the project:
 
@@ -63,8 +64,9 @@ Add:
 
 ```env
 NEXT_PUBLIC_BASE_URL=https://bakery-subscription.vercel.app
-STRIPE_SECRET_KEY=sk_test_or_live_...
+STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
+ALLOW_LIVE_PAYMENTS=false
 ADMIN_PASSWORD=your-admin-password
 DATABASE_PATH=/tmp/bakery-data.json
 ```
@@ -101,4 +103,4 @@ Copy the webhook signing secret into Vercel as `STRIPE_WEBHOOK_SECRET`.
 
 ## Important note
 
-The current JSON database works for demos, but Vercel `/tmp` storage is temporary. For a real bakery taking real paid orders, move subscriptions to a hosted database before launch.
+This setup is for demos only. Keep Stripe in test mode and use a development Supabase project. For a real bakery taking real paid orders, move to production credentials only after a separate production-readiness pass.

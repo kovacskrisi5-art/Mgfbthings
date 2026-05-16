@@ -607,7 +607,7 @@ function InventoryList({ products, onEdit, empty, warning }) {
 }
 
 function SubscriptionPlanner({ products, subscriptions, authHeaders, onSaved }) {
-  const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   const [form, setForm] = useState({
     customer_email: '',
     weekdays: ['Monday'],

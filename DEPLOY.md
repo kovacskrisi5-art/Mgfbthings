@@ -36,15 +36,18 @@ DATABASE_PATH=/tmp/bakery-data.json
 NEXT_PUBLIC_BASE_URL=https://your-vercel-url.vercel.app
 ```
 
-Add these when Stripe/email are ready:
+Add these for the demo site when Stripe/email are ready. Use Stripe test mode only:
 
 ```env
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_or_test_...
-STRIPE_SECRET_KEY=sk_live_or_test_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
+ALLOW_LIVE_PAYMENTS=false
 RESEND_API_KEY=re_...
 EMAIL_FROM=orders@yourdomain.com
 ```
+
+This deployment guide is for a demo site. Do not use live Stripe keys or production Supabase data.
 
 ## 3. Install on phone
 

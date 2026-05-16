@@ -21,6 +21,7 @@ export default function Checkout() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const instantPickup = items.some((item) => item.instant_pickup);
+  const fulfillmentOptions = instantPickup ? ['pickup'] : ['delivery', 'pickup'];
   const subtotal = cartTotal(items);
   const deliveryFee = instantPickup || form.fulfillmentMethod === 'pickup' || subtotal >= 3500 ? 0 : 399;
   const orderTotal = subtotal + deliveryFee;
@@ -89,11 +90,10 @@ export default function Checkout() {
               <div className="field-group">
                 <label>Fulfilment</label>
                 <div className="segmented">
-                  {['delivery', 'pickup'].map((method) => (
+                  {fulfillmentOptions.map((method) => (
                     <button
                       className={form.fulfillmentMethod === method ? 'selected' : ''}
                       key={method}
-                      disabled={instantPickup && method === 'delivery'}
                       onClick={() => setForm({ ...form, fulfillmentMethod: method })}
                       type="button"
                     >
@@ -101,13 +101,15 @@ export default function Checkout() {
                     </button>
                   ))}
                 </div>
+                {!instantPickup && <p className="field-hint">Delivery is available Monday to Friday. Pickup is free.</p>}
+                {instantPickup && <p className="field-hint">Instant pickup carts are collected from the bakery.</p>}
               </div>
               {form.fulfillmentMethod === 'delivery' && (
                 <Field label="Delivery address" name="customerAddress" value={form.customerAddress} onChange={updateField} />
               )}
               <div className="field-group">
                 <label>Preferred day</label>
-                <div className="segmented">
+                <div className="segmented weekday-selector">
                   {DELIVERY_DAYS.map((day) => (
                     <button className={form.deliveryDay === day ? 'selected' : ''} key={day} onClick={() => setForm({ ...form, deliveryDay: day })} type="button">
                       {day}
@@ -139,15 +141,6 @@ export default function Checkout() {
               <div className="summary-row"><span>{form.fulfillmentMethod === 'pickup' ? 'Pickup' : 'Delivery'}</span><strong>{deliveryFee ? formatPrice(deliveryFee) : 'Free'}</strong></div>
               <div className="summary-row total"><span>Due today</span><strong>{formatPrice(orderTotal)}</strong></div>
             </aside>
-          </div>
-          <div className="sticky-checkout-bar">
-            <div>
-              <span>Due today</span>
-              <strong>{formatPrice(orderTotal)}</strong>
-            </div>
-            <button className="checkout-button" disabled={submitting} form="checkout-form" type="submit">
-              {submitting ? 'Opening...' : 'Pay'}
-            </button>
           </div>
         </section>
       </Layout>

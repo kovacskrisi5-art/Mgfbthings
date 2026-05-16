@@ -65,12 +65,12 @@ export default function Home({ cancelled }) {
     };
   }, []);
 
-  const activeProducts = useMemo(
-    () => products.filter((product) => product.active !== false && product.stock_quantity > 0),
+  const shopProducts = useMemo(
+    () => products.filter(isOneTimeShopProduct),
     [products]
   );
-  const availableNow = useMemo(() => activeProducts.filter(isAvailableNow), [activeProducts]);
-  const selected = activeProducts.find((product) => product.id === selectedId) || activeProducts[0];
+  const availableNow = useMemo(() => shopProducts.filter(isAvailableNow), [shopProducts]);
+  const selected = shopProducts.find((product) => product.id === selectedId) || shopProducts[0];
 
   function handleAdd(product = selected) {
     if (!product || product.stock_quantity < 1) return;
@@ -106,14 +106,15 @@ export default function Home({ cancelled }) {
 
         <section className="hero" id="top">
           <div className="hero-copy">
-            <p className="eyebrow">100% gluten-free sourdough bakes</p>
-            <h1>Forget the restrictions.</h1>
+            <p className="eyebrow">Live bakery stock</p>
+            <h1>Shop bread for today.</h1>
             <p className="hero-text">
-              Indulge in high-quality gluten-free bread, made without compromise. Shop sourdough loaves, chewy bagels, baguettes, and better-value boxes.
+              Browse fresh gluten-free loaves, bagels, baguettes, and granola that are in stock for one-time pickup or delivery. Recurring custom boxes live in the builder.
             </p>
             <div className="hero-actions">
               <a className="primary-link" href="#boxes">Shop bread</a>
-              <Link className="secondary-link" href="/build-box">Build your own box</Link>
+              <a className="secondary-link" href="#available-now">Available now</a>
+              <Link className="secondary-link quiet-link" href="/build-box">Build recurring box</Link>
               <Link className="secondary-link" href="/track">Track an order</Link>
             </div>
           </div>
@@ -129,13 +130,13 @@ export default function Home({ cancelled }) {
 
         <section className="section intro-grid" id="delivery">
           <div>
-            <p className="eyebrow">How it works</p>
-            <h2>Hand-made, fresh to order, easy to track.</h2>
+            <p className="eyebrow">Shop bread</p>
+            <h2>A quick one-time bakery order.</h2>
           </div>
           <div className="steps">
-            <Step number="01" title="Mix, match, munch" text="Pick from bagels, loaves, baguettes, and bundles inspired by the real bakery menu." />
-            <Step number="02" title="Checkout securely" text="Enter delivery or pickup details and pay in Stripe test mode." />
-            <Step number="03" title="Track status" text="Follow each order from received through delivered." />
+            <Step number="01" title="Browse live stock" text="Choose from bakery items that are available for normal one-time ordering." />
+            <Step number="02" title="Add to cart" text="Adjust quantities, choose pickup or delivery, and see a clear total before paying." />
+            <Step number="03" title="Checkout and track" text="Pay securely, then follow the order from received through ready or delivered." />
           </div>
         </section>
 
@@ -177,16 +178,18 @@ export default function Home({ cancelled }) {
 
         <section className="section" id="boxes">
           <div className="section-heading">
-            <p className="eyebrow">Fresh from the oven</p>
-            <h2>Bagels, loaves, baguettes, and boxes.</h2>
+            <p className="eyebrow">Shop bread</p>
+            <h2>Fresh live-stock bakery items.</h2>
           </div>
 
           {loading ? (
             <div className="admin-empty">Loading the bakery menu...</div>
+          ) : shopProducts.length === 0 ? (
+            <div className="admin-empty">No shop products are in stock right now. Build a recurring box or check back soon.</div>
           ) : (
             <div className="product-layout">
               <div className="product-list" role="list">
-                {activeProducts.map((product) => (
+                {shopProducts.map((product) => (
                   <button
                     className={`product-row ${selected?.id === product.id ? 'is-active' : ''}`}
                     key={product.id}
@@ -252,9 +255,20 @@ export default function Home({ cancelled }) {
           )}
         </section>
 
+        <section className="section builder-bridge">
+          <div>
+            <p className="eyebrow">Build your own box</p>
+            <h2>Need a recurring gluten-free bakery plan?</h2>
+            <p>
+              Create a custom box, assign it to weekdays, save it to your account, and use it for recurring pickup or delivery.
+            </p>
+          </div>
+          <Link className="primary-link" href="/build-box">Start box builder</Link>
+        </section>
+
         <section className="section promise-band">
-          <Promise title="Dedicated gluten-free kitchen" text="Every item is built around gluten-free sourdough baking and premium ingredients." />
-          <Promise title="Fresh to order" text="The bakery bakes by rhythm, with UK delivery and pickup-style fulfilment built in." />
+          <Promise title="One-time shop" text="The storefront is for fast live-stock orders and instant pickup items." />
+          <Promise title="Recurring boxes" text="The builder handles custom weekday boxes, subscriptions, and saved plans." />
           <Promise title="Track every bake" text="Customers can follow every stage from received to delivered." />
         </section>
       </Layout>
@@ -278,6 +292,16 @@ function Promise({ title, text }) {
       <h3>{title}</h3>
       <p>{text}</p>
     </article>
+  );
+}
+
+function isOneTimeShopProduct(product) {
+  const category = product.metadata?.category || product.category;
+  return (
+    product.active !== false &&
+    Number(product.stock_quantity || 0) > 0 &&
+    product.inventory_category !== 'pre_order' &&
+    category !== 'Boxes & Bundles'
   );
 }
 
