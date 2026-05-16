@@ -647,9 +647,9 @@ function SubscriptionPlanner({ products, subscriptions, authHeaders, onSaved }) 
         <Field label="Customer email" name="customer_email" type="email" value={form.customer_email} onChange={(event) => setForm({ ...form, customer_email: event.target.value })} />
         <div className="field-group">
           <label>Weekdays</label>
-          <div className="chip-grid">
+          <div className="weekday-selector">
             {weekdays.map((day) => (
-              <button className={form.weekdays.includes(day) ? 'active' : ''} key={day} onClick={() => toggleValue('weekdays', day)} type="button">{day.slice(0, 3)}</button>
+              <button className={form.weekdays.includes(day) ? 'active' : ''} key={day} onClick={() => toggleValue('weekdays', day)} type="button">{day}</button>
             ))}
           </div>
         </div>

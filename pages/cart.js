@@ -67,15 +67,6 @@ export default function Cart({ cancelled }) {
             </div>
           )}
         </section>
-        {items.length > 0 && (
-          <div className="sticky-checkout-bar">
-            <div>
-              <span>Total</span>
-              <strong>{formatPrice(cartTotal(items))}</strong>
-            </div>
-            <Link className="checkout-button" href="/checkout">Checkout</Link>
-          </div>
-        )}
       </Layout>
     </>
   );

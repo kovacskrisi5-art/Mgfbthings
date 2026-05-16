@@ -179,10 +179,10 @@ export default function BuildBox() {
                   {orderMode === 'subscription' && (
                     <div className="field-group">
                       <label>Assign this box to weekdays</label>
-                      <div className="chip-grid">
+                      <div className="weekday-selector">
                         {WEEKDAYS.map((day) => (
                           <button className={weekdays.includes(day) ? 'active' : ''} key={day} onClick={() => toggleWeekday(day)} type="button">
-                            {day.slice(0, 3)}
+                            {day}
                           </button>
                         ))}
                       </div>

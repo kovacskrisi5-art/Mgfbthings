@@ -123,7 +123,7 @@ export default function Home({ cancelled }) {
             <ProductImage src={HERO_IMAGE} alt="Fresh gluten-free bakery selection" priority />
             <div className="note-card hero-note">
               <strong>Fresh to order</strong>
-              <span>Free UK delivery over £35</span>
+              <span>Free local delivery over £35</span>
             </div>
           </div>
         </section>
