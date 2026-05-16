@@ -18,13 +18,14 @@ export default async function handler(req, res) {
     deliveryFee = 0,
     notes = '',
   } = req.body;
+  const requestedFulfillment = fulfillmentMethod === 'pickup' ? 'pickup' : 'delivery';
 
   if (!customerName || !customerEmail || !items.length) {
     return res.status(400).json({ error: 'Add items and customer details before checkout.' });
   }
 
-  if (fulfillmentMethod === 'delivery' && !customerAddress.trim()) {
-    return res.status(400).json({ error: 'Delivery address is required.' });
+  if (requestedFulfillment === 'delivery' && !customerAddress.trim()) {
+    return res.status(400).json({ error: 'Local delivery address is required.' });
   }
 
   try {
@@ -135,7 +136,7 @@ export default async function handler(req, res) {
         price_data: {
           currency: 'gbp',
           unit_amount: Number(deliveryFee),
-          product_data: { name: 'Delivery' },
+          product_data: { name: 'Local delivery' },
         },
         quantity: 1,
       });
@@ -147,11 +148,17 @@ export default async function handler(req, res) {
         customer_name: customerName,
         customer_email: customerEmail,
         customer_address: customerAddress,
-        fulfillment_method: instantPickup ? 'pickup' : fulfillmentMethod,
+        fulfillment_method: requestedFulfillment,
         delivery_day: deliveryDay,
-        production_date: instantPickup ? new Date().toISOString().slice(0, 10) : productionDate || productionDateFor(deliveryDay),
-        pickup_ready_at: instantPickup ? pickupReadyAt(maxPickupMinutes) : null,
-        notes: instantPickup ? `${notes ? `${notes} - ` : ''}Instant pickup reservation` : notes,
+        production_date:
+          instantPickup && requestedFulfillment === 'pickup'
+            ? new Date().toISOString().slice(0, 10)
+            : productionDate || productionDateFor(deliveryDay),
+        pickup_ready_at: instantPickup && requestedFulfillment === 'pickup' ? pickupReadyAt(maxPickupMinutes) : null,
+        notes:
+          instantPickup && requestedFulfillment === 'pickup'
+            ? `${notes ? `${notes} - ` : ''}Instant pickup reservation`
+            : notes,
         status: 'received',
         payment_status: 'pending',
         refund_status: 'not_required',

@@ -21,20 +21,26 @@ export default function Checkout() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const instantPickup = items.some((item) => item.instant_pickup);
-  const fulfillmentOptions = instantPickup ? ['pickup'] : ['delivery', 'pickup'];
+  const fulfillmentOptions = ['pickup', 'delivery'];
   const subtotal = cartTotal(items);
-  const deliveryFee = instantPickup || form.fulfillmentMethod === 'pickup' || subtotal >= 3500 ? 0 : 399;
+  const deliveryFee = form.fulfillmentMethod === 'pickup' || subtotal >= 3500 ? 0 : 399;
   const orderTotal = subtotal + deliveryFee;
 
   useEffect(() => {
     const cartItems = readCart();
     setItems(cartItems);
-    if (cartItems.some((item) => item.instant_pickup)) {
+    const preferredFulfillment = cartItems.find((item) => item.fulfillment_method)?.fulfillment_method;
+    if (preferredFulfillment === 'pickup' || preferredFulfillment === 'delivery') {
+      setForm((current) => ({
+        ...current,
+        fulfillmentMethod: preferredFulfillment,
+      }));
+    } else if (cartItems.some((item) => item.instant_pickup)) {
       setForm((current) => ({
         ...current,
         fulfillmentMethod: 'pickup',
         productionDate: new Date().toISOString().slice(0, 10),
-        notes: current.notes || 'Instant pickup reservation',
+        notes: current.notes || 'Instant pickup reservation. Change to local delivery if preferred.',
       }));
     }
   }, []);
@@ -97,15 +103,16 @@ export default function Checkout() {
                       onClick={() => setForm({ ...form, fulfillmentMethod: method })}
                       type="button"
                     >
-                      {method === 'delivery' ? 'Delivery' : 'Pickup'}
+                      {method === 'delivery' ? 'Local Delivery' : 'Pickup'}
                     </button>
                   ))}
                 </div>
-                {!instantPickup && <p className="field-hint">Delivery is available Monday to Friday. Pickup is free.</p>}
-                {instantPickup && <p className="field-hint">Instant pickup carts are collected from the bakery.</p>}
+                <p className="field-hint">
+                  Choose free pickup or local delivery Monday to Friday. Instant pickup items can still be switched to local delivery.
+                </p>
               </div>
               {form.fulfillmentMethod === 'delivery' && (
-                <Field label="Delivery address" name="customerAddress" value={form.customerAddress} onChange={updateField} />
+                <Field label="Local delivery address" name="customerAddress" value={form.customerAddress} onChange={updateField} />
               )}
               <div className="field-group">
                 <label>Preferred day</label>
@@ -117,7 +124,7 @@ export default function Checkout() {
                   ))}
                 </div>
               </div>
-              <Field label="Delivery or pickup date" name="productionDate" type="date" value={form.productionDate} onChange={updateField} />
+              <Field label={form.fulfillmentMethod === 'delivery' ? 'Local delivery date' : 'Pickup date'} name="productionDate" type="date" value={form.productionDate} onChange={updateField} />
               <div className="field-group">
                 <label htmlFor="notes">Order notes</label>
                 <textarea id="notes" name="notes" onChange={updateField} value={form.notes} />
@@ -138,7 +145,7 @@ export default function Checkout() {
                 </p>
               ))}
               <div className="summary-row"><span>Subtotal</span><strong>{formatPrice(subtotal)}</strong></div>
-              <div className="summary-row"><span>{form.fulfillmentMethod === 'pickup' ? 'Pickup' : 'Delivery'}</span><strong>{deliveryFee ? formatPrice(deliveryFee) : 'Free'}</strong></div>
+              <div className="summary-row"><span>{form.fulfillmentMethod === 'pickup' ? 'Pickup' : 'Local delivery'}</span><strong>{deliveryFee ? formatPrice(deliveryFee) : 'Free'}</strong></div>
               <div className="summary-row total"><span>Due today</span><strong>{formatPrice(orderTotal)}</strong></div>
             </aside>
           </div>

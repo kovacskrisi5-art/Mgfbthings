@@ -95,6 +95,7 @@ create table if not exists public.custom_boxes (
   min_items integer not null default 4,
   max_items integer not null default 12,
   total integer not null default 0,
+  fulfillment_method text not null default 'pickup' check (fulfillment_method in ('delivery', 'pickup')),
   order_mode text not null default 'one_time' check (order_mode in ('one_time', 'subscription')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -130,6 +131,7 @@ create table if not exists public.subscriptions (
   bakery_id uuid references public.bakeries(id) on delete set null,
   customer_email text not null,
   status text not null default 'active' check (status in ('active', 'paused', 'cancelled')),
+  fulfillment_method text not null default 'pickup' check (fulfillment_method in ('delivery', 'pickup')),
   cadence text not null default 'weekly' check (cadence in ('weekly', 'monthly')),
   weekdays text[] not null default '{}',
   product_ids uuid[] not null default '{}',
@@ -176,7 +178,9 @@ alter table public.products add column if not exists pickup_ready_minutes intege
 alter table public.products add column if not exists low_stock_threshold integer not null default 4;
 alter table public.products add column if not exists gallery_images text[] not null default '{}';
 alter table public.subscriptions add column if not exists weekdays text[] not null default '{}';
+alter table public.subscriptions add column if not exists fulfillment_method text not null default 'pickup';
 alter table public.subscriptions add column if not exists product_ids uuid[] not null default '{}';
+alter table public.custom_boxes add column if not exists fulfillment_method text not null default 'pickup';
 alter table public.subscriptions add column if not exists skipped_dates date[] not null default '{}';
 alter table public.subscriptions add column if not exists paused_dates date[] not null default '{}';
 alter table public.order_items add column if not exists is_custom_box boolean not null default false;

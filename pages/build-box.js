@@ -15,6 +15,7 @@ export default function BuildBox() {
   const [step, setStep] = useState(1);
   const [orderMode, setOrderMode] = useState('subscription');
   const [weekdays, setWeekdays] = useState(['Monday']);
+  const [fulfillmentMethod, setFulfillmentMethod] = useState('pickup');
   const [boxName, setBoxName] = useState('My custom bakery box');
   const [email, setEmail] = useState('');
   const [savedBoxes, setSavedBoxes] = useState([]);
@@ -64,6 +65,7 @@ export default function BuildBox() {
           name: box.name,
           items: box.items,
           weekdays: box.weekdays,
+          fulfillmentMethod: box.fulfillment_method || 'pickup',
           total: box.total,
           orderMode: box.order_mode,
         }
@@ -71,6 +73,7 @@ export default function BuildBox() {
           name: boxName,
           items: selectedItems,
           weekdays,
+          fulfillmentMethod,
           total,
           orderMode,
         };
@@ -88,6 +91,7 @@ export default function BuildBox() {
         name: boxName,
         items: selectedItems,
         weekdays,
+        fulfillment_method: fulfillmentMethod,
         min_items: MIN_ITEMS,
         max_items: MAX_ITEMS,
         total,
@@ -128,14 +132,16 @@ export default function BuildBox() {
             <div className="builder-plan-card" aria-label="Subscription plan summary">
               <span>Custom plan</span>
               <strong>{orderMode === 'subscription' ? 'Recurring weekdays' : 'One-time custom box'}</strong>
-              <small>{orderMode === 'subscription' ? weekdays.join(', ') || 'Choose weekdays' : 'Checkout once, no recurring schedule'}</small>
+              <small>
+                {fulfillmentMethod === 'delivery' ? 'Local delivery' : 'Pickup'} · {orderMode === 'subscription' ? weekdays.join(', ') || 'Choose weekdays' : 'Checkout once'}
+              </small>
             </div>
           </div>
 
           <div className="builder-steps">
             {['Choose bakes', 'Schedule', 'Save or checkout'].map((label, index) => (
               <button className={step === index + 1 ? 'active' : ''} key={label} onClick={() => setStep(index + 1)} type="button">
-                {index + 1}. {label}
+                {index + 2}. {label}
               </button>
             ))}
           </div>
@@ -174,6 +180,13 @@ export default function BuildBox() {
                     <div className="segmented">
                       <button className={orderMode === 'one_time' ? 'selected' : ''} onClick={() => setOrderMode('one_time')} type="button">One-time</button>
                       <button className={orderMode === 'subscription' ? 'selected' : ''} onClick={() => setOrderMode('subscription')} type="button">Subscription</button>
+                    </div>
+                  </div>
+                  <div className="field-group">
+                    <label>Fulfilment</label>
+                    <div className="segmented">
+                      <button className={fulfillmentMethod === 'pickup' ? 'selected' : ''} onClick={() => setFulfillmentMethod('pickup')} type="button">Pickup</button>
+                      <button className={fulfillmentMethod === 'delivery' ? 'selected' : ''} onClick={() => setFulfillmentMethod('delivery')} type="button">Local Delivery</button>
                     </div>
                   </div>
                   {orderMode === 'subscription' && (

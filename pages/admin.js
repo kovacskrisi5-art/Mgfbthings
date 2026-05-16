@@ -237,7 +237,7 @@ export default function Admin() {
             Fulfilment
             <select value={filters.fulfillment} onChange={(event) => setFilters({ ...filters, fulfillment: event.target.value })}>
               <option value="all">All</option>
-              <option value="delivery">Delivery</option>
+              <option value="delivery">Local Delivery</option>
               <option value="pickup">Pickup</option>
             </select>
           </label>
@@ -610,6 +610,7 @@ function SubscriptionPlanner({ products, subscriptions, authHeaders, onSaved }) 
   const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   const [form, setForm] = useState({
     customer_email: '',
+    fulfillment_method: 'pickup',
     weekdays: ['Monday'],
     product_ids: [],
     next_order_date: '',
@@ -635,7 +636,7 @@ function SubscriptionPlanner({ products, subscriptions, authHeaders, onSaved }) 
       headers: { ...headers, 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
     });
-    setForm({ customer_email: '', weekdays: ['Monday'], product_ids: [], next_order_date: '', skipped_dates: [], notes: '' });
+    setForm({ customer_email: '', fulfillment_method: 'pickup', weekdays: ['Monday'], product_ids: [], next_order_date: '', skipped_dates: [], notes: '' });
     setSaving(false);
     onSaved();
   }
@@ -645,6 +646,13 @@ function SubscriptionPlanner({ products, subscriptions, authHeaders, onSaved }) 
       <form className="checkout-form page-form" onSubmit={save}>
         <h2>Schedule subscription</h2>
         <Field label="Customer email" name="customer_email" type="email" value={form.customer_email} onChange={(event) => setForm({ ...form, customer_email: event.target.value })} />
+        <div className="field-group">
+          <label>Fulfilment</label>
+          <div className="segmented">
+            <button className={form.fulfillment_method === 'pickup' ? 'selected' : ''} onClick={() => setForm({ ...form, fulfillment_method: 'pickup' })} type="button">Pickup</button>
+            <button className={form.fulfillment_method === 'delivery' ? 'selected' : ''} onClick={() => setForm({ ...form, fulfillment_method: 'delivery' })} type="button">Local Delivery</button>
+          </div>
+        </div>
         <div className="field-group">
           <label>Weekdays</label>
           <div className="weekday-selector">
@@ -664,7 +672,7 @@ function SubscriptionPlanner({ products, subscriptions, authHeaders, onSaved }) 
             ))}
           </div>
         </div>
-        <Field label="Next delivery date" name="next_order_date" type="date" value={form.next_order_date} onChange={(event) => setForm({ ...form, next_order_date: event.target.value })} />
+        <Field label={form.fulfillment_method === 'delivery' ? 'Next local delivery date' : 'Next pickup date'} name="next_order_date" type="date" value={form.next_order_date} onChange={(event) => setForm({ ...form, next_order_date: event.target.value })} />
         <div className="field-group">
           <label htmlFor="skip-date">Skip or pause a specific day</label>
           <input
@@ -701,7 +709,7 @@ function SubscriptionPlanner({ products, subscriptions, authHeaders, onSaved }) 
               <div className="admin-order-top">
                 <div>
                   <h2>{subscription.customer_email}</h2>
-                  <p>{(subscription.weekdays || []).join(', ') || 'No weekdays'} · next {subscription.next_order_date || 'not set'}</p>
+                  <p>{subscription.fulfillment_method === 'delivery' ? 'Local delivery' : 'Pickup'} · {(subscription.weekdays || []).join(', ') || 'No weekdays'} · next {subscription.next_order_date || 'not set'}</p>
                 </div>
                 <span className="status-pill" style={{ background: '#e8f5e9', color: '#2e6d32' }}>{subscription.status}</span>
               </div>

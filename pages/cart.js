@@ -81,9 +81,9 @@ function SummaryRows({ items }) {
   return (
     <>
       <div className="summary-row"><span>Items</span><strong>{formatPrice(subtotal)}</strong></div>
-      <div className="summary-row"><span>{instantPickup ? 'Pickup' : 'Delivery'}</span><strong>{delivery ? formatPrice(delivery) : 'Free'}</strong></div>
+      <div className="summary-row"><span>Fulfilment</span><strong>Choose at checkout</strong></div>
       <div className="summary-row total"><span>Total</span><strong>{formatPrice(total)}</strong></div>
-      {instantPickup && <p>Instant pickup items are reserved through checkout.</p>}
+      {instantPickup && <p>Instant pickup items can be collected today or switched to local delivery at checkout.</p>}
     </>
   );
 }

@@ -45,6 +45,7 @@ function cleanPayload(body) {
     min_items: Number(body.min_items || 4),
     max_items: Number(body.max_items || 12),
     total: Math.max(0, Number(body.total || 0)),
+    fulfillment_method: body.fulfillment_method === 'delivery' ? 'delivery' : 'pickup',
     order_mode: body.order_mode === 'subscription' ? 'subscription' : 'one_time',
   };
 }

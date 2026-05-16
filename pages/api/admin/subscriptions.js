@@ -53,6 +53,7 @@ export default async function handler(req, res) {
 function cleanSubscriptionPayload(body) {
   return {
     customer_email: String(body.customer_email || '').trim(),
+    fulfillment_method: body.fulfillment_method === 'delivery' ? 'delivery' : 'pickup',
     status: body.status || 'active',
     cadence: body.cadence || 'weekly',
     weekdays: Array.isArray(body.weekdays) ? body.weekdays : [],
