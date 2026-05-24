@@ -1,8 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#1c1714"/>
-  <circle cx="256" cy="238" r="154" fill="#fff7e9"/>
-  <path d="M128 278c29 66 90 102 128 102s99-36 128-102c-33 20-79 31-128 31s-95-11-128-31Z" fill="#d9974e"/>
-  <path d="M164 226c22-42 53-64 92-64s70 22 92 64c-29-13-60-19-92-19s-63 6-92 19Z" fill="#b86b2f"/>
-  <path d="M191 254c40 12 86 12 130 0" fill="none" stroke="#7a3f20" stroke-width="20" stroke-linecap="round"/>
-  <text x="256" y="462" text-anchor="middle" font-family="Arial, sans-serif" font-size="72" font-weight="800" fill="#fff7e9">GF</text>
+  <!-- Dark brown rounded square -->
+  <rect width="512" height="512" rx="96" fill="#3d1a0a"/>
+
+  <!-- Badge circle -->
+  <circle cx="256" cy="252" r="192" fill="#7c3a18"/>
+  <circle cx="256" cy="252" r="183" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="5"/>
+
+  <!-- Bread base -->
+  <ellipse cx="256" cy="286" rx="106" ry="63" fill="#c07a30"/>
+  <!-- Bread dome -->
+  <ellipse cx="256" cy="224" rx="80" ry="56" fill="#d4904a"/>
+  <!-- Score lines -->
+  <line x1="196" y1="272" x2="316" y2="234" stroke="#9a5618" stroke-width="9" stroke-linecap="round"/>
+  <line x1="196" y1="299" x2="316" y2="261" stroke="#9a5618" stroke-width="9" stroke-linecap="round"/>
+
+  <!-- Green leaf sprout -->
+  <path d="M256 162 C249 138 218 130 218 130 C218 130 223 155 242 167 C249 172 256 168 256 162Z" fill="#4a8c3f"/>
+  <line x1="256" y1="162" x2="232" y2="143" stroke="#3a6a30" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- GF text -->
+  <text x="256" y="424" font-family="Georgia, 'Times New Roman', serif" font-size="76" font-weight="700" fill="rgba(255,255,255,0.90)" text-anchor="middle" letter-spacing="8">GF</text>
 </svg>

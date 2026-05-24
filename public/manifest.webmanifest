@@ -1,13 +1,13 @@
 {
-  "name": "Gluten-Free Bread Club",
-  "short_name": "GF Bread",
-  "description": "Weekly gluten-free bread, bagel, baguette, rolls, and buns subscriptions.",
+  "name": "Gluten Free Save Club",
+  "short_name": "GF Save Club",
+  "description": "Rescue fresh gluten-free bakes at a big discount. Pick up locally before they're gone.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#fffaf2",
-  "theme_color": "#1c1714",
+  "background_color": "#3d1a0a",
+  "theme_color": "#3d1a0a",
   "categories": ["food", "shopping", "lifestyle"],
   "icons": [
     {
@@ -29,9 +29,9 @@
       "purpose": "any"
     },
     {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "/maskable-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "maskable"
     }
   ]
