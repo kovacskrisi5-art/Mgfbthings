@@ -3,19 +3,18 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { getSupabaseBrowserClient } from '../lib/supabase';
 import { formatPrice } from '../lib/cart';
-import { categoryLabel, dailyProductTotals, isAvailableNow, isLowStock, upcomingWeekdays } from '../lib/operations';
-import { ORDER_STATUSES, REFUND_META, REFUND_STATUSES, STATUS_META } from '../lib/status';
-import { groupProductionByDate, isLastMinuteCancellation } from '../lib/production';
+import { categoryLabel, isLowStock } from '../lib/operations';
+import { REFUND_META, REFUND_STATUSES } from '../lib/status';
 
 const emptyProduct = {
   name: '',
   description: '',
   price: 0,
   stock_quantity: 0,
-  inventory_category: 'pre_order',
-  is_ready_now: false,
+  inventory_category: 'leftover_stock',
+  is_ready_now: true,
   pickup_ready_minutes: 0,
-  low_stock_threshold: 4,
+  low_stock_threshold: 3,
   active: true,
   badge: '',
   accent: '#9b4d24',
@@ -24,29 +23,25 @@ const emptyProduct = {
 
 export default function Admin() {
   const [supabase] = useState(() => {
-    try {
-      return getSupabaseBrowserClient();
-    } catch {
-      return null;
-    }
+    try { return getSupabaseBrowserClient(); } catch { return null; }
   });
   const [session, setSession] = useState(null);
   const [authForm, setAuthForm] = useState({ email: '', password: '' });
   const [authError, setAuthError] = useState('');
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
-  const [subscriptions, setSubscriptions] = useState([]);
   const [productForm, setProductForm] = useState(emptyProduct);
   const [editingId, setEditingId] = useState('');
   const [loading, setLoading] = useState(false);
-  const [tab, setTab] = useState('orders');
+  const [tab, setTab] = useState('boxes');
   const [error, setError] = useState('');
-  const [filters, setFilters] = useState({ status: 'active', fulfillment: 'all', refund: 'all', date: '' });
+  const [statusFilter, setStatusFilter] = useState('active');
+  const [dateFilter, setDateFilter] = useState('');
 
   useEffect(() => {
     if (!supabase) return;
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession));
+    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
     return () => data.subscription.unsubscribe();
   }, [supabase]);
 
@@ -62,40 +57,30 @@ export default function Admin() {
     try {
       const headers = await authHeaders();
       const params = new URLSearchParams();
-      if (filters.status !== 'all') params.set('status', filters.status);
-      if (filters.fulfillment !== 'all') params.set('fulfillment', filters.fulfillment);
-      if (filters.refund !== 'all') params.set('refund', filters.refund);
-      if (filters.date) params.set('date', filters.date);
-      const [ordersResponse, productsResponse] = await Promise.all([
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (dateFilter) params.set('date', dateFilter);
+      const [ordersRes, productsRes] = await Promise.all([
         fetch(`/api/admin/orders?${params}`, { headers }),
         fetch('/api/products'),
       ]);
-      const subscriptionsResponse = await fetch('/api/admin/subscriptions', { headers });
-      const ordersData = await ordersResponse.json();
-      const productsData = await productsResponse.json();
-      const subscriptionsData = await subscriptionsResponse.json();
-      if (!ordersResponse.ok) throw new Error(ordersData.error || 'Orders could not be loaded.');
+      const ordersData = await ordersRes.json();
+      const productsData = await productsRes.json();
+      if (!ordersRes.ok) throw new Error(ordersData.error || 'Orders could not be loaded.');
       setOrders(ordersData.orders || []);
       setProducts(productsData.products || []);
-      if (subscriptionsResponse.ok) setSubscriptions(subscriptionsData.subscriptions || []);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [authHeaders, filters, session]);
+  }, [authHeaders, statusFilter, dateFilter, session]);
 
-  useEffect(() => {
-    loadAdminData();
-  }, [loadAdminData]);
+  useEffect(() => { loadAdminData(); }, [loadAdminData]);
 
-  async function handleLogin(event) {
-    event.preventDefault();
+  async function handleLogin(e) {
+    e.preventDefault();
     setAuthError('');
-    if (!supabase) {
-      setAuthError('Supabase is not configured yet.');
-      return;
-    }
+    if (!supabase) { setAuthError('Supabase is not configured yet.'); return; }
     const { error: loginError } = await supabase.auth.signInWithPassword(authForm);
     if (loginError) setAuthError(loginError.message);
   }
@@ -110,26 +95,24 @@ export default function Admin() {
     loadAdminData();
   }
 
-  async function saveProduct(event) {
-    event.preventDefault();
+  async function saveProduct(e) {
+    e.preventDefault();
     const headers = await authHeaders();
     const method = editingId ? 'PATCH' : 'POST';
-    const response = await fetch('/api/admin/products', {
+    const res = await fetch('/api/admin/products', {
       method,
       headers: { ...headers, 'Content-Type': 'application/json' },
       body: JSON.stringify(editingId ? { ...productForm, id: editingId } : productForm),
     });
-    const data = await response.json();
-    if (!response.ok) {
-      setError(data.error || 'Product could not be saved.');
-      return;
-    }
+    const data = await res.json();
+    if (!res.ok) { setError(data.error || 'Product could not be saved.'); return; }
     setProductForm(emptyProduct);
     setEditingId('');
     loadAdminData();
   }
 
   async function deleteProduct(id) {
+    if (!confirm('Delete this product?')) return;
     const headers = await authHeaders();
     await fetch(`/api/admin/products?id=${id}`, { method: 'DELETE', headers });
     loadAdminData();
@@ -142,10 +125,10 @@ export default function Admin() {
       description: product.description || '',
       price: product.price || 0,
       stock_quantity: product.stock_quantity || 0,
-      inventory_category: product.inventory_category || 'pre_order',
+      inventory_category: product.inventory_category || 'leftover_stock',
       is_ready_now: Boolean(product.is_ready_now),
       pickup_ready_minutes: product.pickup_ready_minutes || 0,
-      low_stock_threshold: product.low_stock_threshold || 4,
+      low_stock_threshold: product.low_stock_threshold || 3,
       active: product.active !== false,
       badge: product.badge || '',
       accent: product.accent || '#9b4d24',
@@ -154,33 +137,28 @@ export default function Admin() {
     setTab('products');
   }
 
-  const todaysOrders = useMemo(() => {
-    const today = new Date().toDateString();
-    return orders.filter((order) => new Date(order.created_at).toDateString() === today && order.status !== 'cancelled');
-  }, [orders]);
-  const dailyRevenue = todaysOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
-  const activeOrders = orders.filter((order) => order.status !== 'cancelled');
-  const cancelledOrders = orders.filter((order) => order.status === 'cancelled');
-  const productionDays = useMemo(() => groupProductionByDate(orders), [orders]);
-  const todayIso = new Date().toISOString().slice(0, 10);
-  const todaysProduction = dailyProductTotals(orders, todayIso);
-  const lowStockProducts = products.filter(isLowStock);
-  const availableNowProducts = products.filter(isAvailableNow);
-  const leftoverProducts = products.filter((product) => product.inventory_category === 'leftover_stock' && product.stock_quantity > 0);
+  const todayStr = new Date().toDateString();
+  const todaysOrders = useMemo(
+    () => orders.filter((o) => new Date(o.created_at).toDateString() === todayStr && o.status !== 'cancelled'),
+    [orders, todayStr]
+  );
+  const pickedUpToday = todaysOrders.filter((o) => o.status === 'delivered').length;
+  const dailyRevenue = todaysOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
+  const lowStockCount = products.filter(isLowStock).length;
 
   if (!session) {
     return (
       <>
-        <Head><title>Admin | My Gluten Free Bakery</title></Head>
+        <Head><title>Admin | Gluten Free Save Club</title></Head>
         <main className="admin-login">
           <section className="admin-login-card">
             <div className="brand-mark">GF</div>
-            <h1>Bakery Admin</h1>
+            <h1>Save Club Admin</h1>
             <form onSubmit={handleLogin}>
-              <input autoFocus placeholder="Admin email" type="email" value={authForm.email} onChange={(event) => setAuthForm({ ...authForm, email: event.target.value })} />
-              <input placeholder="Password" type="password" value={authForm.password} onChange={(event) => setAuthForm({ ...authForm, password: event.target.value })} />
-              {authError && <p>{authError}</p>}
-              <button className="admin-primary" type="submit">Login</button>
+              <input autoFocus placeholder="Admin email" type="email" value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} />
+              <input placeholder="Password" type="password" value={authForm.password} onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })} />
+              {authError && <p className="form-error">{authError}</p>}
+              <button className="admin-primary" type="submit">Sign in</button>
             </form>
           </section>
         </main>
@@ -190,12 +168,12 @@ export default function Admin() {
 
   return (
     <>
-      <Head><title>Admin | My Gluten Free Bakery</title></Head>
+      <Head><title>Admin | Gluten Free Save Club</title></Head>
       <main className="admin-page">
         <header className="admin-header">
           <div>
-            <p className="eyebrow">Fulfilment</p>
-            <h1>Bakery Admin</h1>
+            <p className="eyebrow">Gluten Free Save Club</p>
+            <h1>Admin</h1>
           </div>
           <div className="admin-header-actions">
             <Link href="/">View shop</Link>
@@ -204,99 +182,85 @@ export default function Admin() {
         </header>
 
         <section className="admin-stats">
-          <Stat label="Active orders" value={activeOrders.length} />
-          <Stat label="Today production" value={todaysProduction.reduce((sum, item) => sum + item.quantity, 0)} highlight />
-          <Stat label="Low stock alerts" value={lowStockProducts.length} />
+          <Stat label="Today's orders" value={todaysOrders.length} highlight />
+          <Stat label="Picked up today" value={pickedUpToday} />
+          <Stat label="Today's revenue" value={formatPrice(dailyRevenue)} />
+          <Stat label="Low stock alerts" value={lowStockCount} warn={lowStockCount > 0} />
         </section>
 
         {error && <div className="admin-alert">{error}</div>}
 
         <section className="admin-toolbar">
+          <button className={tab === 'boxes' ? 'active' : ''} onClick={() => setTab('boxes')} type="button">Box Manager</button>
           <button className={tab === 'orders' ? 'active' : ''} onClick={() => setTab('orders')} type="button">Orders</button>
-          <button className={tab === 'production' ? 'active' : ''} onClick={() => setTab('production')} type="button">Production</button>
-          <button className={tab === 'inventory' ? 'active' : ''} onClick={() => setTab('inventory')} type="button">Inventory</button>
-          <button className={tab === 'subscriptions' ? 'active' : ''} onClick={() => setTab('subscriptions')} type="button">Subscriptions</button>
           <button className={tab === 'products' ? 'active' : ''} onClick={() => setTab('products')} type="button">Products</button>
-          <button onClick={loadAdminData} type="button">Refresh</button>
+          <button onClick={loadAdminData} type="button" style={{ marginLeft: 'auto' }}>Refresh</button>
         </section>
 
-        <section className="admin-filters">
-          <label>
-            Status
-            <select value={filters.status} onChange={(event) => setFilters({ ...filters, status: event.target.value })}>
-              <option value="active">Active</option>
-              <option value="all">All</option>
-              <option value="cancelled">Cancelled</option>
-              <option value="refunded">Refunded</option>
-              {ORDER_STATUSES.filter((status) => status !== 'cancelled').map((status) => (
-                <option key={status} value={status}>{STATUS_META[status].label}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Fulfilment
-            <select value={filters.fulfillment} onChange={(event) => setFilters({ ...filters, fulfillment: event.target.value })}>
-              <option value="all">All</option>
-              <option value="delivery">Local Delivery</option>
-              <option value="pickup">Pickup</option>
-            </select>
-          </label>
-          <label>
-            Refund
-            <select value={filters.refund} onChange={(event) => setFilters({ ...filters, refund: event.target.value })}>
-              <option value="all">All</option>
-              {REFUND_STATUSES.map((status) => (
-                <option key={status} value={status}>{REFUND_META[status].label}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Date
-            <input type="date" value={filters.date} onChange={(event) => setFilters({ ...filters, date: event.target.value })} />
-          </label>
-          <button className="secondary-link compact-button" onClick={() => setFilters({ status: 'active', fulfillment: 'all', refund: 'all', date: '' })} type="button">Clear</button>
-        </section>
+        {tab === 'orders' && (
+          <section className="admin-filters">
+            <label>
+              Status
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                <option value="active">Active</option>
+                <option value="all">All</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </label>
+            <label>
+              Date
+              <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
+            </label>
+            <button
+              className="secondary-link compact-button"
+              onClick={() => { setStatusFilter('active'); setDateFilter(''); }}
+              type="button"
+            >
+              Clear
+            </button>
+          </section>
+        )}
 
         {loading ? (
-          <div className="admin-empty">Loading admin dashboard...</div>
+          <div className="admin-empty">Loading...</div>
+        ) : tab === 'boxes' ? (
+          <BoxManager products={products} orders={orders} authHeaders={authHeaders} onSaved={loadAdminData} />
         ) : tab === 'orders' ? (
           <section className="admin-orders">
-            {orders.length === 0 ? <div className="admin-empty">No orders yet.</div> : orders.map((order) => (
-              <OrderCard key={order.id} order={order} onStatusChange={updateStatus} />
-            ))}
+            {orders.length === 0
+              ? <div className="admin-empty">No orders yet.</div>
+              : orders.map((order) => (
+                <OrderCard key={order.id} order={order} onStatusChange={updateStatus} />
+              ))
+            }
           </section>
-        ) : tab === 'production' ? (
-          <ProductionView days={productionDays} cancellations={cancelledOrders} />
-        ) : tab === 'inventory' ? (
-          <InventoryOps products={products} lowStock={lowStockProducts} availableNow={availableNowProducts} leftovers={leftoverProducts} onEdit={editProduct} />
-        ) : tab === 'subscriptions' ? (
-          <SubscriptionPlanner products={products} subscriptions={subscriptions} authHeaders={authHeaders} onSaved={loadAdminData} />
         ) : (
           <section className="admin-product-grid">
-            <ProductForm form={productForm} setForm={setProductForm} onSubmit={saveProduct} editing={Boolean(editingId)} onCancel={() => { setEditingId(''); setProductForm(emptyProduct); }} />
+            <ProductForm
+              form={productForm}
+              setForm={setProductForm}
+              onSubmit={saveProduct}
+              editing={Boolean(editingId)}
+              onCancel={() => { setEditingId(''); setProductForm(emptyProduct); }}
+            />
             <div className="admin-orders">
               {products.map((product) => (
                 <article className="admin-order" key={product.id}>
                   <div className="admin-order-top">
                     <div>
                       <h2>{product.name}</h2>
-                      <p>
-                        {formatPrice(product.price)} · {product.stock_quantity} in stock · {categoryLabel(product.inventory_category)}
-                      </p>
+                      <p>{formatPrice(product.price)} &middot; {product.stock_quantity} in stock &middot; {categoryLabel(product.inventory_category)}</p>
                     </div>
                     <div className="order-badges">
-                      {product.stock_quantity <= (product.low_stock_threshold || 4) && product.stock_quantity > 0 && (
+                      {product.stock_quantity <= (product.low_stock_threshold || 3) && product.stock_quantity > 0 && (
                         <span className="warning-pill">Low stock</span>
                       )}
-                      <span className="status-pill" style={{ background: product.is_ready_now ? '#e8f5e9' : '#fff8e1', color: product.is_ready_now ? '#2e6d32' : '#8a6500' }}>
-                        {product.is_ready_now ? 'Ready now' : 'Not ready'}
-                      </span>
                       <span className="status-pill" style={{ background: product.active ? '#e8f5e9' : '#fff0ee', color: product.active ? '#2e6d32' : '#8d2118' }}>
                         {product.active ? 'Visible' : 'Hidden'}
                       </span>
                     </div>
                   </div>
-                  <p>{product.description}</p>
+                  <p style={{ color: 'var(--muted)', fontSize: 14 }}>{product.description}</p>
                   <div className="status-controls">
                     <div>
                       <button onClick={() => editProduct(product)} type="button">Edit</button>
@@ -313,9 +277,9 @@ export default function Admin() {
   );
 }
 
-function Stat({ label, value, highlight }) {
+function Stat({ label, value, highlight, warn }) {
   return (
-    <article className={`admin-stat ${highlight ? 'highlight' : ''}`}>
+    <article className={`admin-stat${highlight ? ' highlight' : ''}${warn ? ' warn' : ''}`}>
       <strong>{value}</strong>
       <span>{label}</span>
     </article>
@@ -324,407 +288,278 @@ function Stat({ label, value, highlight }) {
 
 function OrderCard({ order, onStatusChange }) {
   const [cancelOpen, setCancelOpen] = useState(false);
-  const [cancelForm, setCancelForm] = useState({
-    cancellationReason: order.cancellation_reason || '',
-    refundStatus: order.refund_status || 'pending',
-  });
-  const status = STATUS_META[order.status] || STATUS_META.received;
-  const refund = REFUND_META[order.refund_status || 'not_required'];
-  const lastMinute = isLastMinuteCancellation(order);
+  const [cancelReason, setCancelReason] = useState(order.cancellation_reason || '');
+  const [refundStatus, setRefundStatus] = useState(order.refund_status || 'not_required');
 
-  function submitCancellation(event) {
-    event.preventDefault();
+  const isPendingPickup = order.status !== 'delivered' && order.status !== 'cancelled';
+  const isPickedUp = order.status === 'delivered';
+  const isCancelled = order.status === 'cancelled';
+
+  function submitCancellation(e) {
+    e.preventDefault();
     onStatusChange(order.id, 'cancelled', {
       cancelledBy: 'bakery',
-      cancellationReason: cancelForm.cancellationReason,
-      refundStatus: cancelForm.refundStatus,
+      cancellationReason: cancelReason,
+      refundStatus,
     });
     setCancelOpen(false);
   }
 
   return (
-    <article className={`admin-order ${order.status === 'cancelled' ? 'is-cancelled' : ''}`}>
+    <article className={`admin-order${isCancelled ? ' is-cancelled' : ''}${isPickedUp ? ' is-done' : ''}`}>
       <div className="admin-order-top">
         <div>
-          <h2>{order.customer_name}</h2>
-          <p>{order.customer_email}</p>
+          <h2>{order.customer_name || 'Guest'}</h2>
+          <p style={{ color: 'var(--muted)', fontSize: 13 }}>{order.customer_email}</p>
         </div>
         <div className="order-badges">
-          {lastMinute && <span className="warning-pill">Last-minute cancellation</span>}
-          <span className="status-pill" style={{ background: status.bg, color: status.color }}>
-            {status.label}
+          {isPickedUp && <span className="status-pill" style={{ background: '#e8f5e9', color: '#2e6d32' }}>Picked up</span>}
+          {isCancelled && <span className="status-pill" style={{ background: '#fff0ee', color: '#8d2118' }}>Cancelled</span>}
+          {isPendingPickup && <span className="status-pill" style={{ background: '#fff3e0', color: '#9a4b00' }}>Waiting for pickup</span>}
+        </div>
+      </div>
+
+      <div className="order-summary-row">
+        <div className="included admin-items">
+          <ul>
+            {(order.order_items || []).map((item) => (
+              <li key={item.id}><strong>{item.quantity}&times;</strong> {item.product_name}</li>
+            ))}
+          </ul>
+        </div>
+        <div className="order-meta-col">
+          <span className="order-total">{formatPrice(order.total)}</span>
+          {order.customer_address && order.customer_address !== 'Pickup' && (
+            <span style={{ fontSize: 12, color: 'var(--muted)' }}>{order.customer_address}</span>
+          )}
+          <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+            {new Date(order.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
           </span>
-          <span className="status-pill" style={{ background: refund.bg, color: refund.color }}>
-            {refund.label}
-          </span>
         </div>
       </div>
-      <dl className="order-grid">
-        <div><dt>Order</dt><dd>{String(order.id).slice(0, 8)}</dd></div>
-        <div><dt>Total</dt><dd>{formatPrice(order.total)}</dd></div>
-        <div><dt>Fulfilment</dt><dd>{order.fulfillment_method}</dd></div>
-        <div><dt>Production date</dt><dd>{order.production_date || 'Unscheduled'}</dd></div>
-        {order.pickup_ready_at && <div><dt>Pickup ready</dt><dd>{formatDateTime(order.pickup_ready_at)}</dd></div>}
-        <div><dt>Address</dt><dd>{order.customer_address || 'Pickup'}</dd></div>
-        {order.status === 'cancelled' && (
-          <>
-            <div><dt>Cancelled by</dt><dd>{order.cancelled_by || 'Unknown'}</dd></div>
-            <div><dt>Cancelled at</dt><dd>{formatDateTime(order.cancelled_at)}</dd></div>
-            <div><dt>Reason</dt><dd>{order.cancellation_reason || 'No reason provided'}</dd></div>
-          </>
-        )}
-      </dl>
-      <div className="included admin-items">
-        <span>Items</span>
-        <ul>{(order.order_items || []).map((item) => <li key={item.id}>{item.quantity}x {item.product_name}</li>)}</ul>
-      </div>
-      <div className="status-controls">
-        <span>Update status</span>
-        <div>
-          {ORDER_STATUSES.filter((option) => option !== 'cancelled').map((option) => (
-            <button className={order.status === option ? 'active' : ''} key={option} onClick={() => onStatusChange(order.id, option)} type="button">
-              {STATUS_META[option].label}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="status-controls">
-        <span>Refund status</span>
-        <div>
-          {REFUND_STATUSES.map((option) => (
-            <button
-              className={(order.refund_status || 'not_required') === option ? 'active' : ''}
-              key={option}
-              onClick={() => onStatusChange(order.id, order.status, { refundStatus: option })}
-              type="button"
-            >
-              {REFUND_META[option].label}
-            </button>
-          ))}
-        </div>
-      </div>
-      {order.status !== 'cancelled' && (
-        <div className="status-controls">
-          <button className="danger-button" onClick={() => setCancelOpen(!cancelOpen)} type="button">
+
+      {isCancelled && (
+        <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 8 }}>
+          Reason: {order.cancellation_reason || 'No reason given'}
+        </p>
+      )}
+
+      {isPendingPickup && (
+        <div className="order-actions">
+          <button
+            className="pickup-confirm-button"
+            onClick={() => onStatusChange(order.id, 'delivered')}
+            type="button"
+          >
+            Mark as picked up
+          </button>
+          <button
+            className="danger-link"
+            onClick={() => setCancelOpen(!cancelOpen)}
+            type="button"
+          >
             Cancel order
           </button>
-          {cancelOpen && (
-            <form className="cancel-form" onSubmit={submitCancellation}>
-              <div className="field-group">
-                <label htmlFor={`cancel-${order.id}`}>Cancellation reason</label>
-                <textarea
-                  id={`cancel-${order.id}`}
-                  required
-                  value={cancelForm.cancellationReason}
-                  onChange={(event) => setCancelForm({ ...cancelForm, cancellationReason: event.target.value })}
-                />
-              </div>
-              <div className="field-group">
-                <label htmlFor={`refund-${order.id}`}>Refund status</label>
-                <select
-                  id={`refund-${order.id}`}
-                  value={cancelForm.refundStatus}
-                  onChange={(event) => setCancelForm({ ...cancelForm, refundStatus: event.target.value })}
-                >
-                  {REFUND_STATUSES.map((option) => (
-                    <option key={option} value={option}>{REFUND_META[option].label}</option>
-                  ))}
-                </select>
-              </div>
-              <button className="admin-primary" type="submit">Keep visible and cancel</button>
-            </form>
-          )}
         </div>
       )}
-      {order.order_audit_log?.length > 0 && (
-        <details className="audit-log">
-          <summary>Audit log</summary>
-          {order.order_audit_log.map((entry) => (
-            <p key={entry.id}>
-              {formatDateTime(entry.created_at)}: {entry.actor_type} changed {entry.from_status || 'new'} to {entry.to_status}
-              {entry.note ? ` - ${entry.note}` : ''}
-            </p>
-          ))}
-        </details>
+
+      {cancelOpen && (
+        <form className="cancel-form" onSubmit={submitCancellation}>
+          <div className="field-group">
+            <label htmlFor={`cancel-${order.id}`}>Reason for cancellation</label>
+            <textarea
+              id={`cancel-${order.id}`}
+              required
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="e.g. Customer requested, stock issue..."
+            />
+          </div>
+          <div className="field-group">
+            <label htmlFor={`refund-${order.id}`}>Refund</label>
+            <select
+              id={`refund-${order.id}`}
+              value={refundStatus}
+              onChange={(e) => setRefundStatus(e.target.value)}
+            >
+              {REFUND_STATUSES.map((s) => (
+                <option key={s} value={s}>{REFUND_META[s].label}</option>
+              ))}
+            </select>
+          </div>
+          <button className="admin-primary" type="submit">Confirm cancellation</button>
+        </form>
       )}
     </article>
   );
 }
 
-function ProductionView({ days, cancellations }) {
-  return (
-    <section className="production-view">
-      {days.length === 0 ? (
-        <div className="admin-empty">No active production needed for the current filters.</div>
-      ) : (
-        days.map((day) => (
-          <article className="admin-order production-day" key={day.date}>
-            <div className="admin-order-top">
-              <div>
-                <p className="eyebrow">Production</p>
-                <h2>{formatProductionDate(day.date)}</h2>
-                <p>{day.orders} active orders · {day.delivery} delivery · {day.pickup} pickup</p>
-              </div>
-            </div>
-            <div className="production-list">
-              {day.products.map((product) => (
-                <div key={product.name}>
-                  <strong>{product.name}</strong>
-                  <span>x {product.quantity}</span>
-                </div>
-              ))}
-            </div>
-            {day.customBoxes?.length > 0 && (
-              <div className="custom-box-production">
-                <span>Custom box breakdown</span>
-                {day.customBoxes.map((box) => (
-                  <details key={`${box.orderId}-${box.name}`}>
-                    <summary>{box.name} · order {String(box.orderId).slice(0, 8)}</summary>
-                    <ul>
-                      {box.items.map((item) => (
-                        <li key={item.id}>{item.quantity}x {item.product_name}</li>
-                      ))}
-                    </ul>
-                  </details>
-                ))}
-              </div>
-            )}
-          </article>
-        ))
-      )}
-
-      {cancellations.length > 0 && (
-        <section className="admin-orders">
-          <div className="section-heading">
-            <p className="eyebrow">Cancellation watch</p>
-            <h2>Cancelled orders kept out of production totals.</h2>
-          </div>
-          {cancellations.map((order) => (
-            <article className="admin-order is-cancelled" key={order.id}>
-              <div className="admin-order-top">
-                <div>
-                  <h2>Order {String(order.id).slice(0, 8)}</h2>
-                  <p>{order.customer_name} · {order.production_date || 'Unscheduled'}</p>
-                </div>
-                {isLastMinuteCancellation(order) && <span className="warning-pill">Last-minute cancellation</span>}
-              </div>
-              <dl className="order-grid">
-                <div><dt>Cancelled by</dt><dd>{order.cancelled_by || 'Unknown'}</dd></div>
-                <div><dt>Cancelled at</dt><dd>{formatDateTime(order.cancelled_at)}</dd></div>
-                <div><dt>Refund</dt><dd>{REFUND_META[order.refund_status || 'not_required'].label}</dd></div>
-                <div><dt>Reason</dt><dd>{order.cancellation_reason || 'No reason provided'}</dd></div>
-              </dl>
-            </article>
-          ))}
-        </section>
-      )}
-    </section>
-  );
-}
-
-function formatProductionDate(value) {
-  if (!value || value === 'Unscheduled') return 'Unscheduled';
-  return new Date(`${value}T12:00:00`).toLocaleDateString('en-GB', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
-}
-
-function formatDateTime(value) {
-  if (!value) return 'Not recorded';
-  return new Date(value).toLocaleString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function InventoryOps({ products, lowStock, availableNow, leftovers, onEdit }) {
-  return (
-    <section className="ops-grid">
-      <article className="admin-order">
-        <div className="admin-order-top">
-          <div>
-            <p className="eyebrow">Available now</p>
-            <h2>{availableNow.length} ready for pickup</h2>
-            <p>These items are visible in the customer Available Now section.</p>
-          </div>
-        </div>
-        <InventoryList products={availableNow} onEdit={onEdit} empty="Nothing is ready right now." />
-      </article>
-      <article className="admin-order">
-        <div className="admin-order-top">
-          <div>
-            <p className="eyebrow">Low stock</p>
-            <h2>{lowStock.length} alerts</h2>
-            <p>Products at or below their configured warning threshold.</p>
-          </div>
-        </div>
-        <InventoryList products={lowStock} onEdit={onEdit} empty="No low stock alerts." warning />
-      </article>
-      <article className="admin-order">
-        <div className="admin-order-top">
-          <div>
-            <p className="eyebrow">Leftovers</p>
-            <h2>{leftovers.length} leftover lines</h2>
-            <p>Sell these as available-now stock or freeze them before closing.</p>
-          </div>
-        </div>
-        <InventoryList products={leftovers} onEdit={onEdit} empty="No leftover stock recorded." />
-      </article>
-      <article className="admin-order">
-        <div className="admin-order-top">
-          <div>
-            <p className="eyebrow">All inventory</p>
-            <h2>{products.length} products</h2>
-            <p>Manual adjustments sync to product availability and stock movement history.</p>
-          </div>
-        </div>
-        <InventoryList products={products} onEdit={onEdit} empty="No products." />
-      </article>
-    </section>
-  );
-}
-
-function InventoryList({ products, onEdit, empty, warning }) {
-  if (!products.length) return <div className="admin-empty compact-empty">{empty}</div>;
-  return (
-    <div className="inventory-list">
-      {products.map((product) => (
-        <div key={product.id}>
-          <span>
-            <strong>{product.name}</strong>
-            <small>{categoryLabel(product.inventory_category)} · {product.is_ready_now ? 'ready' : 'not ready'}</small>
-          </span>
-          <span className={warning ? 'low-stock-text' : ''}>{product.stock_quantity}</span>
-          <button onClick={() => onEdit(product)} type="button">Adjust</button>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function SubscriptionPlanner({ products, subscriptions, authHeaders, onSaved }) {
-  const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-  const [form, setForm] = useState({
-    customer_email: '',
-    fulfillment_method: 'pickup',
-    weekdays: ['Monday'],
-    product_ids: [],
-    next_order_date: '',
-    skipped_dates: [],
-    notes: '',
-  });
+function BoxManager({ products, orders, authHeaders, onSaved }) {
   const [saving, setSaving] = useState(false);
+  const [savedId, setSavedId] = useState('');
 
-  function toggleValue(field, value) {
-    const values = form[field];
-    setForm({
-      ...form,
-      [field]: values.includes(value) ? values.filter((item) => item !== value) : [...values, value],
-    });
-  }
-
-  async function save(event) {
-    event.preventDefault();
+  async function updateBox(productId, updates) {
     setSaving(true);
+    setSavedId('');
     const headers = await authHeaders();
-    await fetch('/api/admin/subscriptions', {
-      method: 'POST',
+    const payload = { id: productId };
+    for (const [field, value] of Object.entries(updates)) {
+      payload[field] = typeof value === 'boolean' ? value : Number(value);
+    }
+    const res = await fetch('/api/admin/products', {
+      method: 'PATCH',
       headers: { ...headers, 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     });
-    setForm({ customer_email: '', fulfillment_method: 'pickup', weekdays: ['Monday'], product_ids: [], next_order_date: '', skipped_dates: [], notes: '' });
     setSaving(false);
-    onSaved();
+    if (res.ok) { setSavedId(productId); onSaved(); }
   }
+
+  const rescueBoxes = products.filter(
+    (p) => p.inventory_category === 'leftover_stock' || p.metadata?.category === 'Rescue Boxes'
+  );
+
+  const todayStr = new Date().toDateString();
+  const orderedTodayMap = useMemo(() => {
+    const map = {};
+    for (const order of orders) {
+      if (new Date(order.created_at).toDateString() !== todayStr) continue;
+      if (order.status === 'cancelled') continue;
+      for (const item of (order.order_items || [])) {
+        map[item.product_id] = (map[item.product_id] || 0) + Number(item.quantity || 0);
+      }
+    }
+    return map;
+  }, [orders, todayStr]);
 
   return (
-    <section className="subscription-grid">
-      <form className="checkout-form page-form" onSubmit={save}>
-        <h2>Schedule subscription</h2>
-        <Field label="Customer email" name="customer_email" type="email" value={form.customer_email} onChange={(event) => setForm({ ...form, customer_email: event.target.value })} />
-        <div className="field-group">
-          <label>Fulfilment</label>
-          <div className="segmented">
-            <button className={form.fulfillment_method === 'pickup' ? 'selected' : ''} onClick={() => setForm({ ...form, fulfillment_method: 'pickup' })} type="button">Pickup</button>
-            <button className={form.fulfillment_method === 'delivery' ? 'selected' : ''} onClick={() => setForm({ ...form, fulfillment_method: 'delivery' })} type="button">Local Delivery</button>
-          </div>
+    <section className="box-manager">
+      <div className="section-heading" style={{ marginBottom: 24 }}>
+        <p className="eyebrow">Today&apos;s rescue boxes</p>
+        <h2>Set daily stock</h2>
+        <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 6 }}>
+          Each morning: enter how many boxes you have. Stock goes down automatically as orders come in.
+          Set to 0 to hide a box from the shop.
+        </p>
+      </div>
+
+      {rescueBoxes.length === 0 ? (
+        <div className="admin-empty">
+          No rescue boxes found. Add boxes in the Products tab with category &quot;Leftover stock&quot;.
         </div>
-        <div className="field-group">
-          <label>Weekdays</label>
-          <div className="weekday-selector">
-            {weekdays.map((day) => (
-              <button className={form.weekdays.includes(day) ? 'active' : ''} key={day} onClick={() => toggleValue('weekdays', day)} type="button">{day}</button>
-            ))}
-          </div>
+      ) : (
+        <div className="box-manager-grid">
+          {rescueBoxes.map((product) => (
+            <BoxManagerCard
+              key={product.id}
+              product={product}
+              orderedToday={orderedTodayMap[product.id] || 0}
+              onUpdate={updateBox}
+              saving={saving}
+              justSaved={savedId === product.id}
+            />
+          ))}
         </div>
-        <div className="field-group">
-          <label>Products by weekday</label>
-          <div className="subscription-products">
-            {products.slice(0, 8).map((product) => (
-              <label key={product.id}>
-                <input checked={form.product_ids.includes(product.id)} onChange={() => toggleValue('product_ids', product.id)} type="checkbox" />
-                {product.name}
-              </label>
-            ))}
-          </div>
-        </div>
-        <Field label={form.fulfillment_method === 'delivery' ? 'Next local delivery date' : 'Next pickup date'} name="next_order_date" type="date" value={form.next_order_date} onChange={(event) => setForm({ ...form, next_order_date: event.target.value })} />
-        <div className="field-group">
-          <label htmlFor="skip-date">Skip or pause a specific day</label>
-          <input
-            id="skip-date"
-            type="date"
-            onChange={(event) => {
-              if (event.target.value && !form.skipped_dates.includes(event.target.value)) {
-                setForm({ ...form, skipped_dates: [...form.skipped_dates, event.target.value] });
-              }
-            }}
-          />
-        </div>
-        {form.skipped_dates.length > 0 && <p className="fine-print">Skipped: {form.skipped_dates.join(', ')}</p>}
-        <div className="field-group">
-          <label htmlFor="sub-notes">Notes</label>
-          <textarea id="sub-notes" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
-        </div>
-        <button className="checkout-button full" disabled={saving} type="submit">{saving ? 'Saving...' : 'Save schedule'}</button>
-      </form>
-      <section className="admin-orders">
-        <article className="admin-order">
-          <p className="eyebrow">Upcoming calendar</p>
-          <div className="calendar-strip">
-            {upcomingWeekdays().map((day) => (
-              <span key={day.iso}>{day.label}</span>
-            ))}
-          </div>
-        </article>
-        {subscriptions.length === 0 ? (
-          <div className="admin-empty">No subscriptions scheduled yet.</div>
-        ) : (
-          subscriptions.map((subscription) => (
-            <article className="admin-order" key={subscription.id}>
-              <div className="admin-order-top">
-                <div>
-                  <h2>{subscription.customer_email}</h2>
-                  <p>{subscription.fulfillment_method === 'delivery' ? 'Local delivery' : 'Pickup'} · {(subscription.weekdays || []).join(', ') || 'No weekdays'} · next {subscription.next_order_date || 'not set'}</p>
-                </div>
-                <span className="status-pill" style={{ background: '#e8f5e9', color: '#2e6d32' }}>{subscription.status}</span>
-              </div>
-              {(subscription.skipped_dates || []).length > 0 && <p>Skipped dates: {subscription.skipped_dates.join(', ')}</p>}
-            </article>
-          ))
-        )}
-      </section>
+      )}
     </section>
+  );
+}
+
+function BoxManagerCard({ product, orderedToday, onUpdate, saving, justSaved }) {
+  const [stock, setStock] = useState(String(product.stock_quantity ?? 0));
+  const [price, setPrice] = useState(String(product.price ?? 0));
+  const remaining = product.stock_quantity ?? 0;
+  const soldOut = remaining < 1;
+
+  return (
+    <article className="admin-order box-manager-card" style={{ '--accent': product.accent || '#835832' }}>
+      <div className="admin-order-top">
+        <div>
+          <h2>{product.name}</h2>
+          {(product.bakery_name || product.zone) && (
+            <p style={{ color: 'var(--muted)', fontSize: 13 }}>
+              {product.bakery_name}{product.zone ? ` · ${product.zone}` : ''}
+            </p>
+          )}
+        </div>
+        <span
+          className="status-pill"
+          style={{
+            background: soldOut ? '#fff0ee' : '#e8f5e9',
+            color: soldOut ? '#8d2118' : '#2e6d32',
+          }}
+        >
+          {soldOut ? 'Sold out' : `${remaining} left`}
+        </span>
+      </div>
+
+      <div className="box-stock-summary">
+        <div className="box-stock-cell">
+          <strong>{orderedToday}</strong>
+          <span>ordered today</span>
+        </div>
+        <div className="box-stock-cell">
+          <strong>{remaining}</strong>
+          <span>remaining</span>
+        </div>
+        <div className="box-stock-cell">
+          <strong>{formatPrice(product.price)}</strong>
+          <span>rescue price</span>
+        </div>
+      </div>
+
+      <div className="box-manager-fields">
+        <div className="field-group">
+          <label>Stock for today</label>
+          <div className="box-manager-input-row">
+            <input type="number" min="0" max="99" value={stock} onChange={(e) => setStock(e.target.value)} />
+            <button
+              className="checkout-button"
+              disabled={saving}
+              onClick={() => onUpdate(product.id, { stock_quantity: stock })}
+              type="button"
+            >
+              Set
+            </button>
+          </div>
+        </div>
+        <div className="field-group">
+          <label>Rescue price (pence)</label>
+          <div className="box-manager-input-row">
+            <input type="number" min="0" value={price} onChange={(e) => setPrice(e.target.value)} />
+            <button
+              className="checkout-button"
+              disabled={saving}
+              onClick={() => onUpdate(product.id, { price })}
+              type="button"
+            >
+              Set
+            </button>
+          </div>
+          <p className="field-hint">{formatPrice(Number(price))} &mdash; pence (699 = &pound;6.99)</p>
+        </div>
+      </div>
+
+      <div className="box-frozen-toggle">
+        <button
+          className={`frozen-toggle-btn${product.is_ready_now ? ' toggle-fresh' : ' toggle-frozen'}`}
+          disabled={saving}
+          onClick={() => onUpdate(product.id, { is_ready_now: !product.is_ready_now })}
+          type="button"
+        >
+          {product.is_ready_now ? 'Fresh — ready now' : 'Frozen — needs thawing'}
+        </button>
+        <span style={{ fontSize: 12, color: 'var(--muted)' }}>tap to toggle</span>
+      </div>
+
+      {justSaved && <p style={{ color: '#2e6d32', fontWeight: 700, fontSize: 13, marginTop: 8 }}>Saved.</p>}
+    </article>
   );
 }
 
 function ProductForm({ form, setForm, onSubmit, editing, onCancel }) {
-  function update(event) {
-    const { name, value, type, checked } = event.target;
+  function update(e) {
+    const { name, value, type, checked } = e.target;
     setForm({ ...form, [name]: type === 'checkbox' ? checked : value });
   }
 
@@ -742,32 +577,24 @@ function ProductForm({ form, setForm, onSubmit, editing, onCancel }) {
       <div className="field-group">
         <label htmlFor="inventory_category">Inventory category</label>
         <select id="inventory_category" name="inventory_category" value={form.inventory_category} onChange={update}>
+          <option value="leftover_stock">Rescue Box (Leftover stock)</option>
           <option value="fresh_today">Fresh today</option>
-          <option value="leftover_stock">Leftover stock</option>
           <option value="frozen">Frozen</option>
           <option value="pre_order">Pre-order</option>
         </select>
       </div>
-      <div className="field-group">
-        <label htmlFor="pickup_ready_minutes">Pickup ready time</label>
-        <select id="pickup_ready_minutes" name="pickup_ready_minutes" value={form.pickup_ready_minutes} onChange={update}>
-          <option value="0">Ready now</option>
-          <option value="15">Ready in 15 min</option>
-          <option value="60">Ready in 1 hour</option>
-        </select>
-      </div>
-      <Field label="Badge" name="badge" value={form.badge} onChange={update} />
+      <Field label="Badge text (e.g. Save today)" name="badge" value={form.badge} onChange={update} />
       <Field label="Accent colour" name="accent" value={form.accent} onChange={update} />
       <Field label="Image path" name="image_url" value={form.image_url} onChange={update} />
       <label className="checkbox-row">
         <input checked={form.active} name="active" onChange={update} type="checkbox" />
-        Active on shop
+        Visible in shop
       </label>
       <label className="checkbox-row">
         <input checked={form.is_ready_now} name="is_ready_now" onChange={update} type="checkbox" />
-        Baked and ready for instant pickup
+        Ready for instant pickup
       </label>
-      <button className="checkout-button full" type="submit">{editing ? 'Save product' : 'Add product'}</button>
+      <button className="checkout-button full" type="submit">{editing ? 'Save changes' : 'Add product'}</button>
       {editing && <button className="secondary-link detail-link" onClick={onCancel} type="button">Cancel edit</button>}
     </form>
   );

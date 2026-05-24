@@ -26,13 +26,19 @@ export default async function handler(req, res) {
       if (!id) return res.status(400).json({ error: 'Missing product id' });
       const { data: before } = await supabase
         .from('products')
-        .select('stock_quantity')
+        .select('*')
         .eq('id', id)
         .single();
-      const payload = cleanProductPayload(body);
+      if (!before) return res.status(404).json({ error: 'Product not found' });
+
+      const fullBody = body.name !== undefined
+        ? body
+        : { ...before, ...body };
+
+      const payload = cleanProductPayload(fullBody);
       const { data, error } = await supabase.from('products').update(payload).eq('id', id).select().single();
       if (error) throw error;
-      if (before && Number(before.stock_quantity) !== Number(data.stock_quantity)) {
+      if (Number(before.stock_quantity) !== Number(data.stock_quantity)) {
         await supabase.from('inventory_movements').insert({
           product_id: id,
           movement_type: 'adjustment',
