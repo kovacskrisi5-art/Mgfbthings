@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">GF Bread Club</string>
-    <string name="title_activity_main">GF Bread Club</string>
-    <string name="package_name">com.glutenfreebreadclub.app</string>
-    <string name="custom_url_scheme">com.glutenfreebreadclub.app</string>
+    <string name="app_name">GF Save Club</string>
+    <string name="title_activity_main">GF Save Club</string>
+    <string name="package_name">com.glutenfreesaveclub.app</string>
+    <string name="custom_url_scheme">com.glutenfreesaveclub.app</string>
 </resources>

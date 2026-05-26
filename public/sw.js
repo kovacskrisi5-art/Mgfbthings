@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gf-bread-club-v1';
+const CACHE_NAME = 'gfsc-v1';
 const APP_SHELL = ['/', '/offline.html', '/manifest.webmanifest', '/icon.svg', '/maskable-icon.svg'];
 
 self.addEventListener('install', (event) => {

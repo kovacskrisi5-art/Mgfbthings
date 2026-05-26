@@ -1,11 +1,12 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.glutenfreebreadclub.app',
-  appName: 'GF Bread Club',
+  appId: 'com.glutenfreesaveclub.app',
+  appName: 'GF Save Club',
   webDir: 'out',
   server: {
-    url: 'https://bakery-subscription.vercel.app',
+    // Replace with your live domain after deploying to Vercel
+    url: 'https://glutenfreesaveclub.co.uk',
     cleartext: false,
   },
   android: {
